@@ -14,23 +14,23 @@ fi
 if ! command -v docker &> /dev/null; then
   echo "📦 Installing Docker..."
   apt update
-  apt install -y ca-certificates curl gnupg lsb-release
-
+  apt install -y ca-certificates curl gnupg lsb-release openssl
   curl -fsSL https://get.docker.com | sh
   systemctl enable docker
   systemctl start docker
 fi
 
-# Generate random secret
-SECRET=$(head -c 16 /dev/urandom | xxd -ps)
-PORT=4856
+# Generate random secret (no xxd needed)
+SECRET=$(openssl rand -hex 16)
+PORT=443
 
-# Run proxy container
+# Remove old container if exists
 docker rm -f telegram-proxy >/dev/null 2>&1 || true
 
+# Run proxy
 docker run -d \
   --name telegram-proxy \
-  -p $PORT:4856 \
+  -p $PORT:443 \
   -e SECRET=$SECRET \
   --restart always \
   telegrammessenger/proxy:latest
